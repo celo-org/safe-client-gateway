@@ -3,6 +3,7 @@ pub mod balances;
 pub mod chains;
 pub mod notifications;
 pub mod safes;
+pub mod tokens;
 pub mod transactions;
 pub mod transfers;
 pub mod webhooks;

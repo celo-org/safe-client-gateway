@@ -2,12 +2,14 @@ use crate::cache::cache_operations::RequestCached;
 use crate::config::{balances_cache_duration, balances_request_timeout};
 use crate::models::backend::balances::Balance as BalanceDto;
 use crate::models::backend::chains::NativeCurrency;
+use crate::models::backend::tokens::{TokenPrice, TokenPriceCore};
 use crate::models::service::balances::{Balance, Balances};
 use crate::providers::fiat::FiatInfoProvider;
 use crate::providers::info::{DefaultInfoProvider, InfoProvider};
 use crate::utils::context::Context;
-use crate::utils::errors::ApiResult;
+use crate::utils::errors::{ApiResult, ApiError};
 use std::cmp::Ordering;
+use futures::{stream, FutureExt, StreamExt, future};
 
 pub async fn balances(
     context: &Context<'_>,
@@ -63,6 +65,42 @@ pub async fn balances(
         fiat_total: total_fiat.to_string(),
         items: service_balances,
     })
+}
+
+pub async fn request_token_rates(
+    token_addresses: Vec<&str>,
+    info_provider: &dyn InfoProvider,
+) -> Vec<TokenPrice> {
+    let token_price_results = stream::iter(token_addresses)
+        .map(|token_address| { request_token_usd_rate(token_address, info_provider) })
+        .buffer_unordered(5);
+
+    return token_price_results
+        .filter_map(|t| async move {
+            match t {
+                Ok(token_price) => { Some(token_price) }
+                Err(_) => { None }
+            }
+        })
+        .collect::<Vec<_>>()
+        .await;
+}
+
+pub async fn request_token_usd_rate(
+    token_address: &str,
+    info_provider: &dyn InfoProvider,
+) -> ApiResult<TokenPrice> {
+    let url: String = core_uri!(info_provider, "/tokens/{}/prices/usd/", token_address)?;
+
+    let response: TokenPriceCore = reqwest::get(url).await?.json::<TokenPriceCore>().await?;
+    return Ok(
+        TokenPrice {
+            address: token_address.to_string(),
+            fiat_code: response.fiat_code,
+            fiat_price: response.fiat_price,
+            timestamp: response.timestamp,
+        }
+    );
 }
 
 pub async fn fiat_codes(context: &Context<'_>) -> ApiResult<Vec<String>> {
