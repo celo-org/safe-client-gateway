@@ -7,9 +7,8 @@ use crate::models::service::balances::{Balance, Balances};
 use crate::providers::fiat::FiatInfoProvider;
 use crate::providers::info::{DefaultInfoProvider, InfoProvider};
 use crate::utils::context::Context;
-use crate::utils::errors::{ApiResult, ApiError};
-use std::cmp::Ordering;
-use futures::{stream, FutureExt, StreamExt, future};
+use crate::utils::errors::{ApiResult};
+use futures::{stream, StreamExt};
 
 pub async fn balances(
     context: &Context<'_>,
@@ -45,7 +44,7 @@ pub async fn balances(
 
     let mut total_fiat = 0.0;
 
-    let mut service_balances: Vec<Balance> = backend_balances
+    let service_balances: Vec<Balance> = backend_balances
         .into_iter()
         .map(|it| {
             let balance = it.to_balance(usd_to_fiat, &native_currency);
@@ -54,28 +53,19 @@ pub async fn balances(
         })
         .collect();
 
-    service_balances.sort_by(|a, b| {
-        b.fiat_balance
-            .parse::<f64>()
-            .unwrap_or(0.0)
-            .partial_cmp(&a.fiat_balance.parse::<f64>().unwrap_or(0.0))
-            .unwrap_or(Ordering::Equal)
-    });
-    Ok(Balances {
-        fiat_total: total_fiat.to_string(),
-        items: service_balances,
-    })
-}
+    let mut token_pairs: Vec<(String, String)> = vec![];
+    for balance in &service_balances {
+        let token_address = balance.token_info.address.to_owned();
+        let url_result = core_uri!(info_provider, "/tokens/{}/prices/usd/", token_address);
+        match url_result {
+            Ok(url) => { token_pairs.push((token_address, url)) }
+            _ => {}
+        }
+    }
 
-pub async fn request_token_rates(
-    token_addresses: Vec<&str>,
-    info_provider: &dyn InfoProvider,
-) -> Vec<TokenPrice> {
-    let token_price_results = stream::iter(token_addresses)
-        .map(|token_address| { request_token_usd_rate(token_address, info_provider) })
-        .buffer_unordered(5);
-
-    return token_price_results
+    let token_prices = stream::iter(token_pairs)
+        .map(|(token_address, url)| request_token_usd_rate(token_address, url))
+        .buffer_unordered(5)
         .filter_map(|t| async move {
             match t {
                 Ok(token_price) => { Some(token_price) }
@@ -84,15 +74,18 @@ pub async fn request_token_rates(
         })
         .collect::<Vec<_>>()
         .await;
+
+    Ok(Balances {
+        fiat_total: total_fiat.to_string(),
+        items: service_balances,
+    })
 }
 
 pub async fn request_token_usd_rate(
-    token_address: &str,
-    info_provider: &dyn InfoProvider,
+    token_address: String,
+    endpoint: String,
 ) -> ApiResult<TokenPrice> {
-    let url: String = core_uri!(info_provider, "/tokens/{}/prices/usd/", token_address)?;
-
-    let response: TokenPriceCore = reqwest::get(url).await?.json::<TokenPriceCore>().await?;
+    let response: TokenPriceCore = reqwest::get(endpoint).await?.json::<TokenPriceCore>().await?;
     return Ok(
         TokenPrice {
             address: token_address.to_string(),
