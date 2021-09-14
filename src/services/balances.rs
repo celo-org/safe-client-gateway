@@ -44,27 +44,22 @@ pub async fn balances(
 
     let mut total_fiat = 0.0;
 
-    let service_balances: Vec<Balance> = backend_balances
-        .into_iter()
-        .map(|it| {
-            let balance = it.to_balance(usd_to_fiat, &native_currency);
-            total_fiat += balance.fiat_balance.parse::<f64>().unwrap_or(0.0);
-            balance
-        })
-        .collect();
-
     let mut token_pairs: Vec<(String, String)> = vec![];
-    for balance in &service_balances {
-        let token_address = balance.token_info.address.to_owned();
-        let url_result = core_uri!(info_provider, "/tokens/{}/prices/usd/", token_address);
-        match url_result {
-            Ok(url) => { token_pairs.push((token_address, url)) }
-            _ => {}
+    for balance in &backend_balances {
+        match &balance.token_address {
+            None => {}
+            Some(token_address) => {
+                let url_result = core_uri!(info_provider, "/tokens/{}/prices/usd/", token_address);
+                match url_result {
+                    Ok(url) => { token_pairs.push((token_address.to_owned(), url)) }
+                    _ => {}
+                }
+            }
         }
     }
 
     let token_prices = stream::iter(token_pairs)
-        .map(|(token_address, url)| request_token_usd_rate(token_address, url))
+        .map(|(token_address, url)| request_token_usd_rate(context, token_address, url))
         .buffer_unordered(5)
         .filter_map(|t| async move {
             match t {
@@ -75,17 +70,33 @@ pub async fn balances(
         .collect::<Vec<_>>()
         .await;
 
+    let service_balances: Vec<Balance> = backend_balances
+        .into_iter()
+        .map(|it| {
+            let balance = it.to_balance(usd_to_fiat, &native_currency);
+            total_fiat += balance.fiat_balance.parse::<f64>().unwrap_or(0.0);
+            balance
+        })
+        .collect();
+
     Ok(Balances {
         fiat_total: total_fiat.to_string(),
         items: service_balances,
     })
 }
 
-pub async fn request_token_usd_rate(
+async fn request_token_usd_rate(
+    context: &Context<'_>,
     token_address: String,
     endpoint: String,
 ) -> ApiResult<TokenPrice> {
-    let response: TokenPriceCore = reqwest::get(endpoint).await?.json::<TokenPriceCore>().await?;
+    let body = RequestCached::new(endpoint.to_owned())
+        .cache_duration(balances_cache_duration()) // TODO change values
+        .request_timeout(balances_request_timeout())
+        .execute(context.client(), context.cache())
+        .await?;
+    let response: TokenPriceCore = serde_json::from_str(&body)?;
+
     return Ok(
         TokenPrice {
             address: token_address.to_string(),
