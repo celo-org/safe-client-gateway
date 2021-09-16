@@ -9,6 +9,10 @@ use crate::providers::info::{DefaultInfoProvider, InfoProvider};
 use crate::utils::context::Context;
 use crate::utils::errors::{ApiResult};
 use futures::{stream, StreamExt};
+use std::str::FromStr;
+use std::ops::{Div, Mul};
+use num_traits::cast::FromPrimitive;
+use num_traits::Pow;
 
 pub async fn balances(
     context: &Context<'_>,
@@ -49,7 +53,7 @@ pub async fn balances(
         match &balance.token_address {
             None => {}
             Some(token_address) => {
-                let url_result = core_uri!(info_provider, "/tokens/{}/prices/usd/", token_address);
+                let url_result = core_uri!(info_provider, "/v1/tokens/{}/prices/usd/", token_address);
                 match url_result {
                     Ok(url) => { token_pairs.push((token_address.to_owned(), url)) }
                     _ => {}
@@ -58,6 +62,7 @@ pub async fn balances(
         }
     }
 
+    println!("{:?}", token_pairs);
     let token_prices = stream::iter(token_pairs)
         .map(|(token_address, url)| request_token_usd_rate(context, token_address, url))
         .buffer_unordered(5)
@@ -70,10 +75,18 @@ pub async fn balances(
         .collect::<Vec<_>>()
         .await;
 
+    println!("{:?}", token_prices);
+
     let service_balances: Vec<Balance> = backend_balances
         .into_iter()
         .map(|it| {
-            let balance = it.to_balance(usd_to_fiat, &native_currency);
+            let b_token_address: String = it.token_address.to_owned().unwrap_or("0x0000000000000000000000000000000000000000".to_string());
+            let b_token_decimals = it.token.as_ref().and_then(|token| Some(token.decimals)).unwrap_or(native_currency.decimals);
+            let token_price: Option<&TokenPrice> = token_prices.iter().find(|&token_price| token_price.address == b_token_address);
+            let usd_price: f64 = token_price.and_then(|t| Some(t.fiat_price)).unwrap_or(f64::from(0));
+
+            let x = f64::from_u64(b_token_decimals).unwrap_or(f64::from(1));
+            let balance = it.to_balance(usd_price.mul(usd_to_fiat).mul(f64::from(10).pow(-x)), &native_currency);
             total_fiat += balance.fiat_balance.parse::<f64>().unwrap_or(0.0);
             balance
         })
@@ -97,11 +110,13 @@ async fn request_token_usd_rate(
         .await?;
     let response: TokenPriceCore = serde_json::from_str(&body)?;
 
+    let fiat_price = f64::from_str(&response.fiat_price).unwrap_or(0.0);
+
     return Ok(
         TokenPrice {
             address: token_address.to_string(),
             fiat_code: response.fiat_code,
-            fiat_price: response.fiat_price,
+            fiat_price,
             timestamp: response.timestamp,
         }
     );

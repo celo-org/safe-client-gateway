@@ -13,7 +13,7 @@ pub struct TokenPriceCore {
 pub struct TokenPrice {
     pub address: String,
     pub fiat_code: String,
-    pub fiat_price: String,
+    pub fiat_price: f64,
     pub timestamp: String,
 }
 

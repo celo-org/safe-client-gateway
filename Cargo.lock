@@ -1764,6 +1764,7 @@ dependencies = [
  "lazy_static",
  "log",
  "mockall",
+ "num-traits",
  "proc-macro2",
  "r2d2",
  "redis",
