@@ -4,9 +4,8 @@ use crate::models::service::balances::Balance;
 use crate::providers::info::{TokenInfo, TokenType};
 
 impl BalanceDto {
-    pub fn to_balance(&self, usd_to_fiat: f64, native_coin: &NativeCurrency) -> Balance {
-        let fiat_conversion = self.fiat_conversion.parse::<f64>().unwrap_or(0.0) * usd_to_fiat;
-        let fiat_balance = self.fiat_balance.parse::<f64>().unwrap_or(0.0) * usd_to_fiat;
+    pub fn to_balance(&self, token_usd_price: f64, native_coin: &NativeCurrency) -> Balance {
+        let fiat_balance = self.balance.parse::<f64>().unwrap_or(0.0) * token_usd_price;
         let token_type = self
             .token_address
             .as_ref()
@@ -44,7 +43,7 @@ impl BalanceDto {
             },
             balance: self.balance.to_owned(),
             fiat_balance: fiat_balance.to_string(),
-            fiat_conversion: fiat_conversion.to_string(),
+            fiat_conversion: token_usd_price.to_string(),
         }
     }
 }
