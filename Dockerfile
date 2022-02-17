@@ -1,6 +1,6 @@
 # Build Image
-# We use a stable rust image as we will switch to nightly via the toolchain file.
-FROM rust:1.52.0-slim-buster as builder
+# match with version in rust-toolchain.toml file
+FROM rust:1.58.0-slim-buster as builder
 
 RUN set -ex; \ 
   apt-get update; \
@@ -13,7 +13,7 @@ WORKDIR "/app"
 # Cache dependencies
 # We copy the toolchain requirements first. 
 # This will make it possible that all the stages after the init can be cached.
-COPY rust-toolchain rust-toolchain
+COPY rust-toolchain.toml rust-toolchain.toml
 RUN cargo init
 COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock

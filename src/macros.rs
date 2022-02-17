@@ -1,9 +1,11 @@
+use crate::common::models::backend::chains::ChainInfo;
+use crate::config::vpc_transaction_service_uri;
 macro_rules! concat_parts {
     ($parts_head:expr) => {
         // `stringify!` will convert the expression *as it is* into a string.
         format!(
             "{}{}",
-            $crate::models::service::transactions::ID_SEPARATOR,
+            $crate::routes::transactions::models::ID_SEPARATOR,
             $parts_head
         )
     };
@@ -11,7 +13,7 @@ macro_rules! concat_parts {
         // `stringify!` will convert the expression *as it is* into a string.
         format!(
             "{}{}{}",
-            $crate::models::service::transactions::ID_SEPARATOR,
+            $crate::routes::transactions::models::ID_SEPARATOR,
             $parts_head,
             concat_parts!($($parts_tail),+)
         )
@@ -65,13 +67,21 @@ macro_rules! to_hex_string {
     }};
 }
 
+pub fn get_transaction_service_host(chain_info: ChainInfo) -> String {
+    if vpc_transaction_service_uri() {
+        chain_info.vpc_transaction_service
+    } else {
+        chain_info.transaction_service
+    }
+}
+
 #[doc(hidden)]
 #[macro_export]
 macro_rules! core_uri {
     ($info_provider:tt, $path:expr) => {{
         let result: ApiResult<String> =
         match $info_provider.chain_info().await {
-            Ok(chain_info) => Ok(format!("{}/api{}",chain_info.transaction_service, $path)),
+            Ok(chain_info) => Ok(format!("{}/api{}", crate::macros::get_transaction_service_host(chain_info), $path)),
             Err(error) => Err(error,)
         };
         result

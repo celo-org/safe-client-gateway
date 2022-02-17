@@ -1,11 +1,12 @@
-use crate::models::commons::ValueDecodedType::InternalTransaction;
-use crate::models::commons::{DataDecoded, ParamValue, ValueDecodedType};
+use crate::common::models::data_decoded::ValueDecodedType::InternalTransaction;
+use crate::common::models::data_decoded::{DataDecoded, ParamValue, ValueDecodedType};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
 pub mod context;
 pub mod cors;
 pub mod errors;
+pub mod http_client;
 pub mod json;
 pub mod transactions;
 pub mod urls;
@@ -14,8 +15,14 @@ pub mod urls;
 mod tests;
 
 pub const TRANSFER_METHOD: &str = "transfer";
-pub const ERC20_TRANSFER_METHODS: &[&str] = &[TRANSFER_METHOD, "transferFrom"];
-pub const ERC721_TRANSFER_METHODS: &[&str] = &[TRANSFER_METHOD, "transferFrom", "safeTransferFrom"];
+pub const TRANSFER_FROM_METHOD: &str = "transferFrom";
+pub const SAFE_TRANSFER_FROM_METHOD: &str = "safeTransferFrom";
+pub const ERC20_TRANSFER_METHODS: &[&str] = &[TRANSFER_METHOD, TRANSFER_FROM_METHOD];
+pub const ERC721_TRANSFER_METHODS: &[&str] = &[
+    TRANSFER_METHOD,
+    TRANSFER_FROM_METHOD,
+    SAFE_TRANSFER_FROM_METHOD,
+];
 
 pub const SET_FALLBACK_HANDLER: &'static str = "setFallbackHandler";
 pub const ADD_OWNER_WITH_THRESHOLD: &'static str = "addOwnerWithThreshold";
