@@ -22,17 +22,19 @@ The chart is deployed to Artifact Repository through Cloud Build (using [../clou
 | fullnameOverride | string | `""` | Chart full name override |
 | global.redis.password | string | `""` | Redis depencency chart password |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pullpolicy |
-| image.repository | string | `"us.gcr.io/celo-testnet/safe-client-gateway"` | Image repository |
+| image.repository | string | `"us-central1-docker.pkg.dev/clabs-gnosis-safe/safe-client-gateway"` | Image repository |
 | image.tag | string | `"d0539e5645f2d6fd6498817f64d7a10d7bde96a1"` | Image tag Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | Image pull secrets |
 | ingress.annotations | object | `{}` | Custom Ingress annotations  |
 | ingress.enabled | bool | `true` | Ingress enabled |
-| ingress.hosts | list | `[]` | List of hosts to expose safe-client-gateway. |
-| ingress.tls | string | `nil` | TLS secret for exposing safe-client-gateway with https. |
+| ingress.hosts | list | `[]` | List of hosts to expose safe-client-gateway. See values.yaml for an example. |
+| ingress.tls | list | `[]` | TLS secret for exposing safe-client-gateway with https. See values.yaml for an example. |
+| livenessProbe | object | `{"httpGet":{"path":"/","port":"http"}}` | Liveness probe configuration |
 | nameOverride | string | `""` | Chart name override |
 | nodeSelector | object | `{}` | Kubernetes node selector |
 | podAnnotations | object | `{}` | Custom pod annotations |
 | podSecurityContext | object | `{}` | Custom pod security context |
+| readinessProbe | object | `{"httpGet":{"path":"/","port":"http"}}` | Readiness probe configuration |
 | replicaCount | int | `1` | Number of deployment replicas |
 | resources | object | `{}` | Container resources |
 | safeClientGateway.configServiceUri | string | `""` | URI of the safe-config-service. Normally the safe-config-service Kubernetes svc. |

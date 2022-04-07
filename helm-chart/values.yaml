@@ -70,6 +70,18 @@ ingress:
     #   hosts:
     #      - client-gateway.celo-safe.io
 
+# -- Liveness probe configuration
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+
+# -- Readiness probe configuration
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
 # -- Container resources
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
