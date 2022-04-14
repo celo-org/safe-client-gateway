@@ -7,10 +7,7 @@ updates:
       interval: weekly
       day: monday
     reviewers:
-      - "fmrsabino"
-      - "jpalvarezl"
-      - "rmeissner"
-    open-pull-requests-limit: 3
+      - "celo-org/applications"
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-patch"]
