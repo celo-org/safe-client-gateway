@@ -64,15 +64,22 @@ pub struct SafeInfo {
 pub struct SafeAppInfo {
     pub name: String,
     pub url: String,
-    pub logo_uri: String,
+    pub logo_uri: Option<String>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+struct Icon {
+    pub src: String,
+    pub sizes: Option<String>,
+    pub r#type: Option<String>,
+    pub purpose: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 struct Manifest {
     pub(super) name: String,
-    pub(super) description: String,
-    #[serde(rename(deserialize = "iconPath"))]
-    pub(super) icon_path: String,
+    pub(super) description: Option<String>,
+    pub(super) icons: Option<Vec<Icon>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -150,7 +157,13 @@ impl<C: Cache> InfoProvider for DefaultInfoProvider<'_, C> {
         Ok(SafeAppInfo {
             name: manifest.name.to_owned(),
             url: url.to_owned(),
-            logo_uri: format!("{}/{}", url, manifest.icon_path),
+            logo_uri: match manifest.icons {
+                Some(icons) => match icons.last() {
+                    Some(icon) => Some(format!("{}/{}", url, &icon.src)),
+                    None => None,
+                },
+                None => None,
+            },
         })
     }
 
