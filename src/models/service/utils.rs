@@ -22,3 +22,9 @@ pub struct SafeTransactionEstimation {
 pub struct DataDecoderRequest {
     pub data: String,
 }
+
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ManifestRequest {
+    pub dapp_url: String,
+}

@@ -1,4 +1,7 @@
-use crate::models::service::utils::{DataDecoderRequest, SafeTransactionEstimationRequest};
+use crate::models::service::utils::{
+    DataDecoderRequest, ManifestRequest, SafeTransactionEstimationRequest,
+};
+use crate::providers::info::{DefaultInfoProvider, InfoProvider};
 use crate::services::utils;
 use crate::services::utils::request_data_decoded;
 use crate::utils::context::Context;
@@ -11,6 +14,7 @@ use rocket::serde::json::Json;
  * `/v1/chains/<chain_id>/data-decoder` <br/>
  * Returns [DataDecoded](crate::models::commons::DataDecoded)
  *
+ * 
  * # Data Decoder
  *
  * This endpoint requires the client to send in the body of the request a hexadecimal `String` containing the `data` field of a transaction for decoding
@@ -119,5 +123,55 @@ pub async fn post_safe_gas_estimation<'e>(
             &safe_transaction_estimation_request?.0,
         )
         .await?,
+    )?))
+}
+
+/**
+ * `/v1/chains/<chain_id>/dapp_manifest` <br />
+ * Returns [SafeAppInfo](crate::providers::info::SafeAppInfo)
+ *
+ * # Get foreign manifest.json
+ *
+ * This endpoint provides a way to circumvent CORS issues fetching manifest.json from the frontend
+ *
+ * ## Path
+ *
+ * - `/v1/chains/<chain_id>/safes/dapp_manifest
+ *
+ * ## Examples
+ *
+ * Example request body:
+ *
+ * ```json
+ * {
+ *   "dapp_url": "http://celotracker.com"
+ * }
+ * ```
+ *
+ * This results (at the time of writing this documentation) in:
+ *
+ * ```json
+ * {
+ *     "name": "Celo Tracker",
+ *     "url": "https://celotracker.com",
+ *     "logoUri": "https://celotracker.com/logo512.png"
+ * }
+ * ```
+ *
+ */
+#[post(
+    "/v1/chains/<chain_id>/dapp_manifest",
+    format = "application/json",
+    data = "<request>"
+)]
+pub async fn post_fetch_dapp_manifest_json<'e>(
+    context: Context<'_>,
+    chain_id: String,
+    request: Result<Json<ManifestRequest>, Error<'e>>,
+) -> ApiResult<content::Json<String>> {
+    let info_provider = DefaultInfoProvider::new(chain_id.as_str(), &context);
+    let r = request.unwrap();
+    Ok(content::Json(serde_json::to_string(
+        &info_provider.safe_app_info(&r.dapp_url).await.ok(),
     )?))
 }
