@@ -11,7 +11,7 @@ pub enum ChainCache {
 impl From<&str> for ChainCache {
     fn from(id: &str) -> Self {
         match id {
-            "1" => ChainCache::Mainnet,
+            "42220" => ChainCache::Mainnet,
             _ => ChainCache::Other,
         }
     }
