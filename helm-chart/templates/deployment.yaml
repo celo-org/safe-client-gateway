@@ -32,38 +32,48 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+            - name: SCHEME
+              value: http
+            - name: ROCKET_LOG_LEVEL
+              value: normal
             - name: ROCKET_PORT
               value: "80"
             - name: ROCKET_ADDRESS
               value: "0.0.0.0"
-            - name: ROCKET_LOG_LEVEL
-              value: normal
-            - name: SCHEME
-              value: http
+            - name: ROCKET_SECRET_KEY
+              value: {{ required "Require .Values.env.rocketSecretKey" .Values.env.rocketSecretKey }}
+            - name: RUST_BACKTRACE
+              value: "1"
             - name: WEBHOOK_TOKEN
-              value: {{ required "Require .Values.safeClientGateway.webhookToken" .Values.safeClientGateway.webhookToken }}
+              value: {{ required "Require .Values.env.webhookToken" .Values.env.webhookToken }}
             - name: INTERNAL_CLIENT_CONNECT_TIMEOUT
               value: "10000"
             - name: SAFE_APP_INFO_REQUEST_TIMEOUT
               value: "10000"
             - name: CHAIN_INFO_REQUEST_TIMEOUT
               value: "15000"
+            - name: LOG_ALL_ERROR_RESPONSES
+              value: "true"
             - name: REDIS_URI
               value: redis://:{{ .Values.global.redis.password }}@{{ .Release.Name }}-redis-master
             - name: REDIS_URI_MAINNET
               value: redis://:{{ .Values.global.redis.password }}@{{ .Release.Name }}-redis-master
+            - name: FEATURE_FLAG_NESTED_DECODING
+              value: "true"
+            - name: FEATURE_FLAG_BALANCES_RATE_IMPLEMENTATION
+              value: "false"
+            - name: FEATURE_PREVIEW_ENDPOINT
+              value: "true"
+            - name: SAFE_APPS_TAGS_FEATURE_ENABLED
+              value: "false"
             - name: EXCHANGE_API_BASE_URI
               value: http://api.exchangeratesapi.io/latest
-            - name: LOG_ALL_ERROR_RESPONSES
-              value: "true"
-            - name: CONFIG_SERVICE_URI
-              value: {{ required "Require .Values.safeClientGateway.configServiceUri" .Values.safeClientGateway.configServiceUri }}
-            - name: ROCKET_SECRET_KEY
-              value: {{ required "Require .Values.safeClientGateway.rocketSecretKey" .Values.safeClientGateway.rocketSecretKey }}
             - name: EXCHANGE_API_KEY
-              value: {{ required "Require .Values.safeClientGateway.exchangeApiKey" .Values.safeClientGateway.exchangeApiKey }}
-            - name: RUST_BACKTRACE
-              value: "1"
+              value: {{ required "Require .Values.env.exchangeApiKey" .Values.env.exchangeApiKey }}
+            - name: CONFIG_SERVICE_URI
+              value: {{ required "Require .Values.env.configServiceUri" .Values.env.configServiceUri }}
+            - name: TRANSACTION_SERVICE_AUTH_TOKEN
+              value: {{ required "Require .Values.env.txAuthToken" .Values.env.txAuthToken }}
           ports:
             - name: http
               containerPort: 80

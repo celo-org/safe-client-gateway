@@ -20,16 +20,19 @@ ingress:
     hosts:
        - client-gateway.celo-safe.io
 
-safeClientGateway:
+env:
   configServiceUri: http://safe-config-service
   webhookToken: test
   rocketSecretKey: test
   exchangeApiKey: test
+  txAuthToken: test
 
 global:
   redis:
     password: testetestes
 
 redis:
+  image:
+    tag: "6.2.7"
   replica:
     replicaCount: 1
