@@ -120,8 +120,10 @@ env:
 
 redis:
   image:
+    # -- Redis depencency Docker image version
     tag: "6.2.7"
   replica:
+    # -- Redis depencency number of replicas
     replicaCount: 1
 
 global:

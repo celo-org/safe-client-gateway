@@ -12,13 +12,18 @@ The chart is deployed to Artifact Repository through Cloud Build (using [../clou
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://charts.bitnami.com/bitnami | redis | 15.3.2 |
+| https://charts.bitnami.com/bitnami | redis | 17.3.7 |
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Kubernetes pod affinity |
+| env.configServiceUri | string | `""` | URI of the safe-config-service. Normally the safe-config-service Kubernetes svc. |
+| env.exchangeApiKey | string | `""` | Key for exchange API |
+| env.rocketSecretKey | string | `""` | Secret key for Rocket |
+| env.txAuthToken | string | `"test"` | Transaction Service Auth Token |
+| env.webhookToken | string | `""` | Token for the webhook |
 | fullnameOverride | string | `""` | Chart full name override |
 | global.redis.password | string | `""` | Redis depencency chart password |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pullpolicy |
@@ -36,12 +41,10 @@ The chart is deployed to Artifact Repository through Cloud Build (using [../clou
 | podAnnotations | object | `{}` | Custom pod annotations |
 | podSecurityContext | object | `{}` | Custom pod security context |
 | readinessProbe | object | `{"httpGet":{"path":"/","port":"http"}}` | Readiness probe configuration |
+| redis.image.tag | string | `"6.2.7"` | Redis depencency Docker image version |
+| redis.replica.replicaCount | int | `1` | Redis depencency number of replicas |
 | replicaCount | int | `1` | Number of deployment replicas |
 | resources | object | `{}` | Container resources |
-| safeClientGateway.configServiceUri | string | `""` | URI of the safe-config-service. Normally the safe-config-service Kubernetes svc. |
-| safeClientGateway.exchangeApiKey | string | `""` | Key for exchange API |
-| safeClientGateway.rocketSecretKey | string | `""` | Secret key for Rocket |
-| safeClientGateway.webhookToken | string | `""` | Token for the webhook |
 | securityContext | object | `{}` | Custom container security context |
 | service.port | int | `80` | Kubernetes Service Type |
 | service.type | string | `"ClusterIP"` | Kubernetes Service Type |
