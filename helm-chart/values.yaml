@@ -116,7 +116,7 @@ env:
   # -- Key for exchange API
   exchangeApiKey: ""
   # -- Transaction Service Auth Token
-  txAuthToken: test
+  txAuthToken: ""
 
 redis:
   image:
