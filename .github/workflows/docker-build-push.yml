@@ -23,13 +23,13 @@ jobs:
         with:
           workload_identity_provider: 'projects/1094498259535/locations/global/workloadIdentityPools/gh-safe-client-gateway/providers/github-by-repos'
           service_account: 'safe-client-gateway-images@devopsre.iam.gserviceaccount.com'
-          access_token_lifetime: '20m'
+          access_token_lifetime: '50m'
 
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@877d4953d2c70a0ba7ef3290ae968eb24af233bb'
 
       - name: 'Configure docker for gcloud auth'
-        run: 'gcloud auth configure-docker us-docker.pkg.dev'
+        run: 'gcloud auth configure-docker us-west1-docker.pkg.dev'
 
       - id: docker-push-latest
         name: Build Docker image and push to Google Artifact Registry
