@@ -40,13 +40,4 @@ jobs:
           context: .
           tags: |
              us-west1-docker.pkg.dev/devopsre/clabs-public-images/safe-client-gateway:latest
-
-      - id: docker-push-commit
-        name: Build Docker image and push to Google Artifact Registry
-        uses: docker/build-push-action@e551b19e49efd4e98792db7592c17c09b89db8d8
-        with:
-          platforms: linux/amd64
-          push: true
-          context: .
-          tags: |
              us-west1-docker.pkg.dev/devopsre/clabs-public-images/safe-client-gateway:${{ github.sha }}
