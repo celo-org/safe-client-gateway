@@ -65,3 +65,4 @@ cargo test -- --test-threads 1
 ```
 
 By default, `cargo test` will execute the tests in the test suite in parallel. Because some of the tests update some shared local state (eg.: environment variables) the tests should be executed on a single thread – thus `--test-threads 1`.
+
