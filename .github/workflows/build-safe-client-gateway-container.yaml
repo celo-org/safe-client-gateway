@@ -1,0 +1,30 @@
+name: Docker Build Push
+on:
+  push:
+    branches:
+      - 'feat/celo'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  Build-Container-dev:
+    uses: celo-org/reusable-workflows/.github/workflows/container-cicd-trivy.yaml@4d6318267653821632f999d9e6705b550fa63ced
+    if: github.ref != 'refs/heads/feat/celo'
+    with:
+      workload-id-provider: ${{ vars.WORKLOAD_ID_PROVIDER_NON_PROD }}
+      service-account:  'safe-client-gateway-dev@devopsre.iam.gserviceaccount.com'
+      artifact-registry: ${{ vars.DEV_IMAGE_REPO }}/safe-client-gateway
+      tag: testing
+      context: .
+
+
+  Build-Container:
+   uses: celo-org/reusable-workflows/.github/workflows/container-cicd-trivy.yaml@4d6318267653821632f999d9e6705b550fa63ced
+   if: github.ref == 'refs/heads/feat/celo'
+   with:
+      workload-id-provider: ${{ vars.WORKLOAD_ID_PROVIDER_PROD }}
+      service-account:  'safe-client-gateway@devopsre.iam.gserviceaccount.com'
+      artifact-registry: ${{ vars.SAFE_CLIENT_GATEWAY_IMAGE_REPO }}/safe-client-gateway
+      tag: latest
+      context: .
+
