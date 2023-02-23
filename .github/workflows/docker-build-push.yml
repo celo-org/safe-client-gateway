@@ -1,43 +1,31 @@
-name: Build and Push Docker image
-
+name: Docker Build Push
 on:
-  workflow_dispatch:
-
   push:
     branches:
       - 'feat/celo'
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  Build-Push-Docker:
-    runs-on: ubuntu-latest
-    permissions: # Must change the job token permissions to use JWT auth
-      id-token: write
-      contents: read
-    steps:
-      - name: 'Checkout'
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+  Build-Container-dev:
+    uses: celo-org/reusable-workflows/.github/workflows/container-cicd-trivy.yaml@4d6318267653821632f999d9e6705b550fa63ced
+    if: github.ref != 'refs/heads/feat/celo'
+    with:
+      workload-id-provider: ${{ vars.WORKLOAD_ID_PROVIDER_NON_PROD }}
+      service-account:  'safe-client-gateway-dev@devopsre.iam.gserviceaccount.com'
+      artifact-registry: ${{ vars.DEV_IMAGE_REPO }}/safe-client-gateway
+      tag: testing
+      context: .
 
-      - id: auth
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@ceee102ec2387dd9e844e01b530ccd4ec87ce955'
-        with:
-          workload_identity_provider: 'projects/1094498259535/locations/global/workloadIdentityPools/gh-safe-client-gateway/providers/github-by-repos'
-          service_account: 'safe-client-gateway-images@devopsre.iam.gserviceaccount.com'
-          access_token_lifetime: '50m'
 
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@877d4953d2c70a0ba7ef3290ae968eb24af233bb'
+  Build-Container:
+   uses: celo-org/reusable-workflows/.github/workflows/container-cicd-trivy.yaml@4d6318267653821632f999d9e6705b550fa63ced
+   if: github.ref == 'refs/heads/feat/celo'
+   with:
+      workload-id-provider: ${{ vars.WORKLOAD_ID_PROVIDER_PROD }}
+      service-account:  'safe-client-gateway@devopsre.iam.gserviceaccount.com'
+      artifact-registry: ${{ vars.SAFE_CLIENT_GATEWAY_IMAGE_REPO }}/safe-client-gateway
+      tag: latest
+      context: .
 
-      - name: 'Configure docker for gcloud auth'
-        run: 'gcloud auth configure-docker us-west1-docker.pkg.dev'
-
-      - id: docker-push-latest
-        name: Build Docker image and push to Google Artifact Registry
-        uses: docker/build-push-action@e551b19e49efd4e98792db7592c17c09b89db8d8
-        with:
-          platforms: linux/amd64
-          push: true
-          context: .
-          tags: |
-             us-west1-docker.pkg.dev/devopsre/clabs-public-images/safe-client-gateway:latest
-             us-west1-docker.pkg.dev/devopsre/clabs-public-images/safe-client-gateway:${{ github.sha }}
+i
