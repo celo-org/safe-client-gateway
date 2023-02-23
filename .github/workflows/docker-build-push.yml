@@ -12,7 +12,7 @@ jobs:
     if: github.ref != 'refs/heads/feat/celo'
     with:
       workload-id-provider: ${{ vars.WORKLOAD_ID_PROVIDER_NON_PROD }}
-      service-account:  'safe-client-gateway-dev@devopsre.iam.gserviceaccount.com'
+      service-account:  'safe-client-gateway-images-dev@devopsre.iam.gserviceaccount.com'
       artifact-registry: ${{ vars.DEV_IMAGE_REPO }}/safe-client-gateway
       tag: testing
       context: .
@@ -23,7 +23,7 @@ jobs:
    if: github.ref == 'refs/heads/feat/celo'
    with:
       workload-id-provider: ${{ vars.WORKLOAD_ID_PROVIDER_PROD }}
-      service-account:  'safe-client-gateway@devopsre.iam.gserviceaccount.com'
+      service-account:  'safe-client-gateway-images@devopsre.iam.gserviceaccount.com'
       artifact-registry: ${{ vars.SAFE_CLIENT_GATEWAY_IMAGE_REPO }}/safe-client-gateway
       tag: latest
       context: .
